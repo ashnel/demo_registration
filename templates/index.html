@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,20 +8,30 @@
     <title>Document</title>
 </head>
 <body>
-    <form action='/submit' method='post'>
+    <form action='/process' method='post'>
+        <h1>Register</h1>
+        <input type='hidden' name='formtype' value='register' />
         Email: <input type='text' name='email'><br>
         First Name: <input type='text' name='firstname'><br>
         Last Name: <input type='text' name='lastname'><br>
-        Password: <input type='password' name='password1'><br>
-        Confirm Password: <input type='password' name='password2'><br>
-        <input type='submit' value='Submit'>
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-            <p>{{message}}</p>
-            {% endfor %}
-        {% endif %}
-        {% endwith %}
+        Password: <input type='password' name='password'><br>
+        Confirm Password: <input type='password' name='passwordcheck'><br>
+        <input type='submit' value='Register'>
     </form>
+
+    <form action='/process' method='post'>
+        <h1>Login</h1>
+        <input type='hidden' name='formtype' value='login' />
+        Email: <input type='text' name='email'><br>
+        Password: <input type='password' name='password'><br>
+        <input type='submit' value='Login'>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
 </body>
 </html>
