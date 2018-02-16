@@ -6,7 +6,7 @@ emailregex = re.compile(r'^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9.+_-]+\.[a-zA-Z]+$')
 nameregex = re.compile(r'^[a-zA-Z]+$')
 app = Flask(__name__)  
 app.secret_key = 'supertopsecret'
-mysql = MySQLConnector(app, 'registration')
+mysql = MySQLConnector(app, 'wall')
 
 @app.route('/')
 def index():
@@ -15,6 +15,8 @@ def index():
 @app.route('/process', methods=['POST'])
 def fieldcheck():
 	goto = '/'
+	email = request.form['email']
+	db_email = mysql.query_db("SELECT email FROM users WHERE email = '{}'".format(email))
 	if request.form['formtype'] == 'register':
 		if len(request.form['email']) < 1:
 			flash('Email field cannot be empty.', 'color')
@@ -34,6 +36,8 @@ def fieldcheck():
 			flash('Password must be more than 8 Characters!', 'color')
 		elif request.form['password'] != request.form['passwordcheck']:
 			flash('Password does not match password confirmation!', 'color')
+		elif len(db_email) > 0:
+			flash("This user already exists!", 'color')
 		else:
 			password = md5.new(request.form['password']).hexdigest()
 			first_name = request.form['firstname']
@@ -58,8 +62,39 @@ def fieldcheck():
 			if len(db_password) < 1 and len(db_email) < 1:
 				flash('Not a registered user. Please register or try again.', 'color')
 			elif email == db_email[0]['email'] and password == db_password[0]['password']:
-				return render_template('logged_in.html', regEmail = email)
+				session['id']=mysql.query_db('SELECT id FROM users WHERE users.email ="{}"'.format(email))
+				return redirect('/wall')
 			else:
 				flash('Your email and password do not match. Please try again.', 'color')
 		return redirect(goto)
+
+@app.route('/message', methods=['POST'])
+def post_message():
+	posted_message = request.form['postbox']
+	user_id = session['id'][0]['id']
+	query = mysql.query_db("INSERT INTO `wall`.`messages` (message, user_id, created_at, updated_at) VALUE ('{}', '{}', NOW(), NOW())".format(posted_message, user_id))
+	return redirect('/wall')
+
+@app.route('/logout')
+def logout():
+	session.clear()
+	return redirect('/')
+
+@app.route('/wall')
+def render_wall():
+	query = mysql.query_db("SELECT * FROM messages")
+	messages = query
+	post_query = mysql.query_db("SELECT users.first_name, users.last_name, messages.message, messages.id, messages.created_at FROM messages JOIN users on messages.user_id = users.id")
+	comment_query = mysql.query_db("SELECT users.first_name, users.last_name, comments.comment, comments.message_id, comments.created_at FROM comments JOIN users on users.id = comments.user_id JOIN messages on messages.user_id = users.id GROUP BY comments.id ORDER BY comments.created_at DESC")
+	return render_template('wall.html', all_messages=post_query, all_comments=comment_query)
+
+@app.route('/comment/<id>', methods=['POST'])
+def post_comment(id):
+	posted_comment = request.form['commentbox']
+	user_id = session['id'][0]['id']
+	query = "INSERT INTO comments (comment, user_id, message_id, created_at, updated_at) VALUE (:comment, :id, :specific_id, NOW(), NOW())"
+	data = {'comment': request.form['commentbox'], 'id': user_id, 'specific_id': id}
+	mysql.query_db(query, data)
+	return redirect('/wall')
+
 app.run(debug=True)

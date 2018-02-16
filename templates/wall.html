@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel='stylesheet' type='text/css' href='{{ url_for("static", filename = "style.css") }}'>
+    <title>Document</title>
+</head>
+<body>
+    <a href='/logout'>Logout Pimpin</a>
+    <h1>Post a message</h1>
+    <form action="/message", method="POST">
+        <textarea name='postbox' rows="4" cols="50"></textarea>
+        <input name="submit" type="submit" value="Post a message">
+    </form><br /><br />
+    {% for message in all_messages %}
+        <div>
+            <p>{{ message['first_name'] }} {{ message['last_name'] }}</p>
+            <p>{{ message['created_at'] }}</p>
+            <p>{{ message['message'] }}</p>
+        </div><br />
+    <form class='comment' action="/comment/{{ message['id'] }}" , method="POST">
+        <input type="text" name='commentbox' rows="4" cols="50">
+        <input name="submit" type="submit" value="Post a comment">
+    </form>
+    <hr>
+        {% for comment in all_comments %}
+        {% if comment['message_id'] == message['id']%}
+        <p>{{ comment['first_name'] }} {{ comment['last_name'] }}</p>
+        <p>{{ comment['created_at'] }}</p>
+        <p>{{ comment['comment'] }}</p>
+        <br />
+
+        {% endif %}
+        {% endfor %}
+    {% endfor %}
+</body>
+</html>

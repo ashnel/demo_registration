@@ -17,3 +17,8 @@ input{
 .color {
     color: red;
 }
+
+.comment {
+    display:inline-block;
+    text-align: left;
+}
